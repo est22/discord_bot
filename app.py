@@ -13,5 +13,39 @@ app.config['JSON_AS_ASCII'] = False
 db = SQLAlchemy(app)
 db.init_app(app)
 
+from model import *
+
+class Board(Resource):
+    def get(self):   # 게시판 있는 글 불러오기
+        article_search_result = article.query.all()
+        articles = [{'글 번호' : arti.id, '글 내용' : arti.content} for arti in article_search_result]
+        return jsonify(status="success", result=articles)
+
+
+    def post(self):     # 글 작성 (글 내용, 비밀번호 필요)
+        try:
+            data = request.get_json()
+            content = data.get('content')
+            password = data.get('password')
+
+            article_info = article(password, content)
+            db.session.add(article_info)
+            db.session.commit()
+
+            return jsonify(status="success", article_info={'글 내용': content, '글 번호': article_info.id})
+        
+
+        except Exception as e:
+            return jsonify(error=str(e))
+        
+
+    def delete(self):   # 글 삭제
+        pass
+
+    def put(self):      # 글 수정
+        pass
+
+api.add_resource(Board,'/board')
+
 if __name__ == '__main__':
     app.run(port=1234, debug=True)
